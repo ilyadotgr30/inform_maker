@@ -3,6 +3,14 @@ from bs4 import BeautifulSoup as bs
 from docxtpl import DocxTemplate
 import datetime
 
+############################ далее в функциях есть параметр head 
+head = requests.utils.default_headers()
+head.update(
+    {
+        'User-Agent': 'My User Agent 1.0',
+    }
+)
+#############################
 print('Привет! Это прога сделает тебе информирование на завтра (временно не рекомендуется запускать ее в пятницу и в субботу). \ Для запуска необходимо ввести своё имя в формате "И.А. Киса".')
 your_name = input('Введи имя: ')
 # сделать парсер на Орёл 
@@ -56,13 +64,17 @@ def tommorow_date():
 
 # проверка длинны оперативного информрования
 def check_len(text):
-    pass
+    if len(text) > 1750:
+        text = text[0:1750].strip()
+        index = text.rfind('.')
+        text = text[0:index + 1]
+    return text
 
 # парсинг РИА Новости
-def parse_ria_news(news_count,urls):
+def parse_ria_news(news_count,urls, head):
     d = datetime.date.weekday(datetime.date.today() + datetime.timedelta(days=1))
     url = urls[d]
-    response = requests.get(url)
+    response = requests.get(url, headers=head)
     soup = bs(response.text, 'lxml')
     quotes = soup.find_all('a', class_='list-item__title color-font-hover-only')
     hrefs = []
@@ -75,7 +87,7 @@ def parse_ria_news(news_count,urls):
     # переход по каждой ссылке и извлечение текста
     for i in range(0,news_count):
         url = hrefs[i]
-        response = requests.get(url)
+        response = requests.get(url, headers=head)
         soup = bs(response.text, 'lxml')
         quotes = soup.find_all('div', class_='article__text')
         texts.append(i)
@@ -84,10 +96,10 @@ def parse_ria_news(news_count,urls):
             texts.append(quote.text)
     return texts,  news_headers
 
-def parse_orel_news(news_count):
+def parse_orel_news(news_count, head):
     d = datetime.date.weekday(datetime.date.today() + datetime.timedelta(days=1))
     url = 'https://newsorel.ru/'
-    response = requests.get(url)
+    response = requests.get(url, headers=head)
     soup = bs(response.text, 'lxml')
     quotes = soup.find_all('a', class_='post-title')
     hrefs = []
@@ -101,7 +113,7 @@ def parse_orel_news(news_count):
 
     for i in range(0,news_count):
         url_to_parse = url + hrefs[i]
-        response = requests.get(url_to_parse)
+        response = requests.get(url_to_parse, headers=head)
         soup = bs(response.text, 'lxml')
         quotes = soup.find('div', class_='post-content')
         quotes = quotes.find_all('p')
@@ -113,15 +125,15 @@ def parse_orel_news(news_count):
     
     return texts, news_headers
 
-def parse_briefing():
+def parse_briefing(head):
     url = 'https://z.mil.ru/spec_mil_oper/brief/briefings.htm'
-    response = requests.get(url)
+    response = requests.get(url, headers=head)
     soup = bs(response.text, 'lxml')
     quotes = soup.find_all('div', class_='newsitem')
     href = quotes[0].find('a').get('href')         # ссылка на брифинг
     briefing_header =  quotes[0].find('a').text     # заголовок
     # спарсить брифинг
-    response = requests.get('https://z.mil.ru/' + href)
+    response = requests.get('https://z.mil.ru/' + href, headers=head)
     soup = bs(response.text, 'lxml')
     quotes = soup.find_all('p')
     text = []
@@ -173,9 +185,9 @@ def modify_texts(texts):
 
 d = datetime.date.weekday(datetime.date.today() + datetime.timedelta(days=1))
 if d == 5:
-    texts, headers = parse_orel_news(5)
+    texts, headers = parse_orel_news(5,head)
 else: 
-    texts, headers = parse_ria_news(5,urls)
+    texts, headers = parse_ria_news(5,urls,head)
 
 tommorow = get_date(tommorow_date()) # получили дату 20 декабря 2022 года
 mounth = get_mounth(tommorow_date()) # получили месяц в формате декабря
@@ -184,10 +196,11 @@ date_list = tommorow_date().split('.')           # [20 12 2022]
 dmy = [date_list[0], date_list[1], date_list[2]] # [20 12 2022]
 
 mod_texts = modify_texts(texts) # 1 новость = 1 элемент списка
-briefing_text = parse_briefing()
+briefing_text = check_len(parse_briefing(head))
 
 form_doc(themes[datetime.date.weekday(datetime.date.today() + datetime.timedelta(days=1))], headers, tommorow, mounth, dmy, mod_texts, briefing_text, your_name) # cформировали документ
 
 
 print('Твоё информирование готово! Пожалуйста проверь объём информирования))) \n<3')
+
 

@@ -4,10 +4,10 @@
 }
 
 body {
-    background-color: #616161;
+    background-color: #fff;
 }
 .header {
-    background-color: aquamarine;
+    background-image: linear-gradient(to right, #ffecd2 0%, #fcb69f 51% 100%);
     height: 95px;
 }
 
@@ -20,9 +20,11 @@ body {
 
 .main {
     margin-top: 10vh;
-    height: 470px;
+    height: 370px;
     width: 650px;
-    background-color: aquamarine;
+    /* background-color: aquamarine; */
+    background-image: linear-gradient(to right, #ffecd2 0%, #fcb69f 51% 100%);
+
     padding: 50px 25px 50px 25px ;
     border-radius: 60px;
 }
@@ -31,6 +33,7 @@ body {
     text-align: center;
     font-family: 'Press Start 2P', cursive;
     font-size: 50px;
+    color: 
 }
 
 .inblock_p {
@@ -55,11 +58,11 @@ body {
     width: 50%;
     height: 45px;
     border-radius: 30px;
-    
-
-
-    
+    border-width: 10px;
+    border-style: none;
+    box-shadow: 0 5px 30px 0 rgba(0,0,0,0.2);   
 }
+
 
 select {
     margin-top: 7px;
@@ -77,4 +80,17 @@ select {
     margin-top: 30px;
     border-radius: 30px;
     border-width: 0px;
+    box-shadow: 0 5px 30px 0 rgba(0,0,0,0.2);
+    font-family: 'PT Mono', monospace;
+    font-size: 25px;
+
+    transition: 0.5s;
+    background-size: 200% auto;
+    color: white;
+    background-image: linear-gradient(to right, #a1c4fd 0%, #c2e9fb 51%, #a1c4fd 100%);
+}
+
+.input_button:hover {
+    background-position: right center;
+    cursor: pointer;
 }

@@ -8,7 +8,7 @@ your_name = input('Введи имя: ')
 # сделать парсер на Орёл 
 # добавить подсчет слов для оперативного информирования
 themes = ['Военно-политическая обстановка в мире','Новости мировой и отечественной культуры','Актуальные вопросы политической и социально-экономической жизни общества','Актуальные вопросы военной службы, новинки российской техники и вооружения','Новейшие информационные технологии','Актуальные события города Орла и Орловской области']
-urls = ['https://ria.ru/world/','https://ria.ru/search/?query=культура','https://ria.ru/politics/','https://ria.ru/defense_safety/','https://ria.ru/search/?query=информационные+технологии','']
+urls = ['https://ria.ru/world/','https://ria.ru/search/?query=культура','https://ria.ru/politics/','https://ria.ru/defense_safety/','https://ria.ru/search/?query=информационные+технологии','https://newsorel.ru/']
 
 # формирование документа
 def form_doc(theme, headers, tommorow, mounth, dmy, texts, briefing_text, name):
@@ -53,7 +53,11 @@ def tommorow_date():
     today = datetime.date.today()
     tommorow = (today + datetime.timedelta(days=1)).strftime('%d.%m.%Y')
     return tommorow
-    
+
+# проверка длинны оперативного информрования
+def check_len(text):
+    pass
+
 # парсинг РИА Новости
 def parse_ria_news(news_count,urls):
     d = datetime.date.weekday(datetime.date.today() + datetime.timedelta(days=1))
@@ -80,7 +84,34 @@ def parse_ria_news(news_count,urls):
             texts.append(quote.text)
     return texts,  news_headers
 
+def parse_orel_news(news_count):
+    d = datetime.date.weekday(datetime.date.today() + datetime.timedelta(days=1))
+    url = 'https://newsorel.ru/'
+    response = requests.get(url)
+    soup = bs(response.text, 'lxml')
+    quotes = soup.find_all('a', class_='post-title')
+    hrefs = []
+    news_headers = []
+    texts = []
+    # сбор ссылок и заговловков
+    for i in range(0,news_count):
+        hrefs.append(quotes[i].get('href'))
+        news_headers.append(quotes[i].text)
+    # переход по каждой ссылке и извлечение текста
 
+    for i in range(0,news_count):
+        url_to_parse = url + hrefs[i]
+        response = requests.get(url_to_parse)
+        soup = bs(response.text, 'lxml')
+        quotes = soup.find('div', class_='post-content')
+        quotes = quotes.find_all('p')
+        texts.append(i)
+        url_to_parse = ''
+        # добавление абзацев в texts
+        for quote in quotes:
+            texts.append(quote.text)
+    
+    return texts, news_headers
 
 def parse_briefing():
     url = 'https://z.mil.ru/spec_mil_oper/brief/briefings.htm'
@@ -140,9 +171,11 @@ def modify_texts(texts):
 
     return modified_texts
 
-
-
-texts, headers = parse_ria_news(5,urls) 
+d = datetime.date.weekday(datetime.date.today() + datetime.timedelta(days=1))
+if d == 5:
+    texts, headers = parse_orel_news(5)
+else: 
+    texts, headers = parse_ria_news(5,urls)
 
 tommorow = get_date(tommorow_date()) # получили дату 20 декабря 2022 года
 mounth = get_mounth(tommorow_date()) # получили месяц в формате декабря
@@ -155,6 +188,6 @@ briefing_text = parse_briefing()
 
 form_doc(themes[datetime.date.weekday(datetime.date.today() + datetime.timedelta(days=1))], headers, tommorow, mounth, dmy, mod_texts, briefing_text, your_name) # cформировали документ
 
-parse_briefing()
 
 print('Твоё информирование готово! Пожалуйста проверь объём информирования))) \n<3')
+
